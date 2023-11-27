@@ -1,0 +1,14 @@
+lockfileVersion: '6.0'
+
+dependencies:
+  spark-md5:
+    specifier: ^3.0.2
+    version: registry.npmmirror.com/spark-md5@3.0.2
+
+packages:
+
+  registry.npmmirror.com/spark-md5@3.0.2:
+    resolution: {integrity: sha512-wcFzz9cDfbuqe0FZzfi2or1sgyIrsDwmPwfZC4hiNidPdPINjeUwNfv5kldczoEAcjl9Y1L3SM7Uz2PUEQzxQw==, registry: https://registry.npm.taobao.org/, tarball: https://registry.npmmirror.com/spark-md5/-/spark-md5-3.0.2.tgz}
+    name: spark-md5
+    version: 3.0.2
+    dev: false

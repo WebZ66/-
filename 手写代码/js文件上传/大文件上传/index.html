@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Document</title>
+    </head>
+    <body>
+        <input type="file" />
+        <script src="./spark-md5.js"></script>
+        <script>
+            let inp = document.querySelector('input')
+            let uploadedChunks = JSON.parse(localStorage.getItem('uploadedChunks')) || []
+            function uploadChunk(chunk) {
+                return new Promise((resolve, reject) => {
+                    setTimeout(() => {
+                        if (chunk == 10 || chunk == 20 || chunk == 30 || chunk == 40) {
+                            reject(chunk)
+                        } else {
+                            resolve(chunk)
+                        }
+                    })
+                })
+            }
+
+            //对file对象进行切片
+            inp.onchange = function (e) {
+                console.log('重新上传')
+                const file = e.target.files[0]
+                // let piece = file.slice(0, 100) //取0-99字节的切片
+                const chunks = createChunks(file, 2048)
+                //得到的chunks就是所有的blob，可以通过ajax直接上传
+                const worker = new Worker('./web-worker/worker.js')
+                worker.postMessage(chunks)
+                worker.onmessage = function (event) {
+                    let hash = event.data
+                    //如此得到了chunks和hash进行分片上传
+                    upload(chunks).then(
+                        (v) => {
+                            console.log('成功上传')
+                        },
+                        (error) => {
+                            console.log('缺少分片重新上传')
+                            e.target.value = ''
+                        },
+                    )
+                }
+            }
+
+            function createChunks(file, chunkSize) {
+                const result = []
+                for (let i = 0; i < file.size; i += chunkSize) {
+                    result.push(file.slice(i, i + chunkSize))
+                }
+                return result
+            }
+
+            /* 文件秒传
+               秒传其实就是已经上传的分片无需再次上传，跟服务器进行一次通信，
+               服务器需要告诉客户端哪个文件哪个分片需要重新上传。因此分片需要唯一标识
+               这个标识就是hash，用的算法就是md5  使用spark-md5
+            */
+            //注意：不推荐计算整个文件的hash值，用增量算法计算分块的hash
+            function hash(chunks) {
+                return new Promise((resolve) => {
+                    const spark = new SparkMD5()
+                    function _read(i) {
+                        if (i >= chunks.length) {
+                            //读取了所有的块 需要调用spark.end(),返回的hash值
+                            resolve(spark.end())
+                            return
+                        }
+                        const reader = new FileReader()
+                        reader.readAsArrayBuffer(chunks[i])
+                        reader.onload = function (e) {
+                            //读取到了对应块的字节
+                            let bytes = e.target.result
+                            spark.append(bytes)
+                            _read(i + 1)
+                        }
+                    }
+                    _read(0)
+                })
+            }
+
+            /*
+            断点续传：
+            定义一个uploadChunks用来存放所有上传成功的切片，每次要上传切片时，判断是否存在uploadChunks中，如果不存在，就上传
+            上传成功后，就推入到uploadChunks中，并存储进localStorage。
+
+            如果所有切片全部上传完毕，再将localStorage清空。断电续传就是每次mounted时，读取localStorage中存储的uploadChunks，重新
+            切片上传时，如果已经存在于uploadChunks就无需再次上传
+            */
+
+            async function upload(chunks) {
+                for (let i = 0; i < chunks.length; i++) {
+                    if (uploadedChunks.includes(i)) {
+                        continue
+                    }
+                    console.log(`从${i}开始上传`)
+                    try {
+                        const res = await uploadChunk(i)
+                        uploadedChunks.push(i)
+                        localStorage.setItem('uploadedChunks', JSON.stringify(uploadedChunks))
+                    } catch (error) {
+                        console.log('上传失败', error)
+                    }
+                }
+                if (uploadedChunks.length == chunks.length) {
+                    return uploadedChunks
+                } else {
+                    return Promise.reject('error')
+                }
+            }
+        </script>
+    </body>
+</html>

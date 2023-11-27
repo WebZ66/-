@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Document</title>
+        <style>
+            .box {
+                width: 200px;
+                height: 200px;
+                background-color: red;
+            }
+            .result {
+                width: 500px;
+                height: 500px;
+                border: 3px solid #000;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="target" class="box" draggable="true"></div>
+        <div class="process"></div>
+        <div class="result"></div>
+        <script>
+            const box = document.querySelector('.box')
+            box.ondragstart = function (e) {
+                /* console.log('start', e)
+                e.dataTransfer.effectAllowed = 'all'
+                e.dataTransfer.setData('target', e.target.id) */
+            }
+            const result = document.querySelector('.result')
+            //阻止其称为过程容器
+            result.ondragover = function (e) {
+                e.preventDefault()
+            }
+            result.ondrop = function (e) {
+                e.preventDefault()
+                let target = e.dataTransfer.getData('target')
+                const moveEle = document.getElementById(target)
+                const copyNode = moveEle.cloneNode() //实现复制，拖拽直接appendChild即可
+                const container = e.target
+                container.appendChild(copyNode)
+            }
+        </script>
+    </body>
+</html>
