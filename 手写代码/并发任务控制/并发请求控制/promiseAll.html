@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Document</title>
+    </head>
+    <body>
+        <script>
+            //接收一个tasks数组，一个parallelCount限制。
+            function addTask(value) {
+                return () => {
+                    return new Promise((resolve) => {
+                        setTimeout(() => {
+                            resolve(`${value}完成`)
+                        }, value * 1000)
+                    })
+                }
+            }
+
+            function myPromiseAll(tasks, parallelCount = 2) {
+                let _tasks = tasks
+                let total = tasks.length
+                let runningCount = 0
+                let successArr = []
+                let errorArr = []
+                let index = 0
+                let now = new Date()
+                console.log('任务开始时间', now.getSeconds())
+                return new Promise((resolve, reject) => {
+                    function _run() {
+                        while (_tasks.length > 0 && runningCount < 2) {
+                            let task = tasks.shift()
+                            runningCount++
+                            task()
+                                .then(
+                                    (v) => {
+                                        let now = new Date()
+                                        console.log('v', v, now.getSeconds())
+                                        successArr[index++] = v
+                                        runningCount--
+                                        if (index >= total) {
+                                            resolve(successArr)
+                                        }
+                                    },
+                                    (r) => {
+                                        errorArr[index++] = r
+                                        if (errorArr.length == parallelCount) {
+                                            reject(errorArr)
+                                        }
+                                    },
+                                )
+                                .finally(() => {
+                                    _run()
+                                })
+                        }
+                    }
+
+                    _run()
+                })
+            }
+            //顺序也需要按序完成
+            myPromiseAll([addTask(1), addTask(4), addTask(3), addTask(2)]).then((res) => console.log(res))
+        </script>
+    </body>
+</html>
