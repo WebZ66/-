@@ -2178,9 +2178,9 @@ type A3 = P<'x' | 'y'>
 **注意：**
 
 -   如果用于简单的条件判断，则是直接判断前面的类型是否可分配给后面的类型
--   若`extends`前面的类型是泛型，且泛型传入的是联合类型时，则会依次判断该联合类型的所有子类型是否可分配给extends后面的类型（是一个分发的过程）。
+-   若`extends`前面的类型是泛型，且`泛型传入的是联合类型`时，则会依次判断该联合类型的所有子类型是否可分配给extends后面的类型（是一个分发的过程）。
 
-**总结，就是`extends`前面的参数为`泛型`时，且`泛型为联合类型时`，则会分解（依次遍历所有的子类型进行条件判断）联合类型进行判断。然后将最终的结果组成新的联合类型。**
+**总结，就是`extends`前面的参数为`泛型`时，且`泛型为联合类型时`，则会分解（依次遍历所有的子类型进行条件判断）联合类型进行判断。然后将`最终的结果组成新的联合类型`。**
 
 **如果不是泛型，前面直接是联合类型，那么也是直接判断前面类型是否可分配给后面类型**。如A2，自然是false，返回类型2
 
@@ -2201,9 +2201,45 @@ type A4 = P<'x' | 'y'>
 
 ## infer
 
+作用：函数中的推断
+
 在**条件类型中使用**，可以从正在`比较的类型`中推断类型，然后在`true分支`里引用该`推断结果`
 
-# 类型兼容性
+```ts
+type Return<T>= T是一个函数? 函数的返回类型:类型的本身
+```
+
+在ts中？就是**extends条件类型**
+
+```ts
+//ts中函数类型除了Function  也可以使用 (...args:any[])=>  infer R指的是ts推断出来的返回值类型
+type Return<T> = T extends (...args: any[]) => infer R ? R : T
+
+```
+
+
+
+**案例**
+
+传入一个函数，推导出第一个参数的类型并返回
+
+```ts
+type FirstArg<T> = T extends (first: infer F, ...args: any[]) => any ? F : T
+
+type fa = FirstArg<(name:string,age:number) => void>
+```
+
+
+
+```ts
+type ArrayType<T> = T extends (infer I)[] ? I : T
+
+type ItemType1 = ArrayType<number[]>
+```
+
+
+
+类型兼容性
 
 > 集合论中，如果一个集合的所有元素在集合B中都存在，则A是B的子集；
 >
@@ -2512,12 +2548,52 @@ type p = FunctionKeys<Person>
 
 **这里需要知道一个细节 `{} extends {当前key:值}` 可以判断`当前key`是否是可选的**
 
-```
+```ts
 type OptionalKeys<T> = {
     [P in keyof T]: {} extends Pick<T, P> ? P : never
 }[keyof T]
-​
+
 ```
+
+
+
+## UnionToIntersection
+
+目标：**将联合类型转化为交叉类型**
+
+```ts
+type UnionToIntersection<U> = (U extends any ? (k: U) => void : never) extends (
+  k: infer I
+) => void
+  ? I
+  : never;
+```
+
+
+
+`过程分析：`
+
+```
+U extends any ? (k: U) => void : never
+```
+
+> U传入的是一个联合类型，它会依次判断每个值是否属于any， 属于就返回一个`函数类型(k:U)=>void`,将联合类型的每个成员映射成`一个接受该成员的函数`，并最后组装成一个联合类型
+
+![image-20231201145716984](https://gitee.com/zhengdashun/pic_bed/raw/master/img/image-20231201145716984.png) 
+
+**转化为：**
+
+```
+((k: "Mon") => void) | ((k: "Tue") => void) | ((k: "Wed") => void) extends (k:infer I)=>void?I:never
+```
+
+接着遍历每一项成员，推导其参数是否是`同一类型I`，如果是返回I，不然never。
+
+![image-20231201150932012](https://gitee.com/zhengdashun/pic_bed/raw/master/img/image-20231201150932012.png)
+
+
+
+
 
 
 

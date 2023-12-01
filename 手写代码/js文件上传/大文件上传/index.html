@@ -24,9 +24,7 @@
                 })
             }
 
-            //对file对象进行切片
             inp.onchange = function (e) {
-                console.log('重新上传')
                 const file = e.target.files[0]
                 // let piece = file.slice(0, 100) //取0-99字节的切片
                 const chunks = createChunks(file, 2048)
@@ -36,52 +34,25 @@
                 worker.onmessage = function (event) {
                     let hash = event.data
                     //如此得到了chunks和hash进行分片上传
-                    upload(chunks).then(
+                    upload(chunks, hash).then(
                         (v) => {
                             console.log('成功上传')
                         },
                         (error) => {
                             console.log('缺少分片重新上传')
-                            e.target.value = ''
+                            e.target.value = '' //这很重要，不然没法上传同一个图片
                         },
                     )
                 }
             }
 
+            //对file对象进行切片
             function createChunks(file, chunkSize) {
                 const result = []
                 for (let i = 0; i < file.size; i += chunkSize) {
                     result.push(file.slice(i, i + chunkSize))
                 }
                 return result
-            }
-
-            /* 文件秒传
-               秒传其实就是已经上传的分片无需再次上传，跟服务器进行一次通信，
-               服务器需要告诉客户端哪个文件哪个分片需要重新上传。因此分片需要唯一标识
-               这个标识就是hash，用的算法就是md5  使用spark-md5
-            */
-            //注意：不推荐计算整个文件的hash值，用增量算法计算分块的hash
-            function hash(chunks) {
-                return new Promise((resolve) => {
-                    const spark = new SparkMD5()
-                    function _read(i) {
-                        if (i >= chunks.length) {
-                            //读取了所有的块 需要调用spark.end(),返回的hash值
-                            resolve(spark.end())
-                            return
-                        }
-                        const reader = new FileReader()
-                        reader.readAsArrayBuffer(chunks[i])
-                        reader.onload = function (e) {
-                            //读取到了对应块的字节
-                            let bytes = e.target.result
-                            spark.append(bytes)
-                            _read(i + 1)
-                        }
-                    }
-                    _read(0)
-                })
             }
 
             /*
@@ -113,6 +84,34 @@
                     return Promise.reject('error')
                 }
             }
+
+            /* 文件秒传
+               秒传其实就是已经上传的分片无需再次上传，跟服务器进行一次通信，
+               服务器需要告诉客户端哪个文件哪个分片需要重新上传。因此分片需要唯一标识
+               这个标识就是hash，用的算法就是md5  使用spark-md5
+            */
+            //注意：不推荐计算整个文件的hash值，用增量算法计算分块的hash
+            /*  function hash(chunks) {
+                return new Promise((resolve) => {
+                    const spark = new SparkMD5()
+                    function _read(i) {
+                        if (i >= chunks.length) {
+                            //读取了所有的块 需要调用spark.end(),返回的hash值
+                            resolve(spark.end())
+                            return
+                        }
+                        const reader = new FileReader()
+                        reader.readAsArrayBuffer(chunks[i])
+                        reader.onload = function (e) {
+                            //读取到了对应块的字节
+                            let bytes = e.target.result
+                            spark.append(bytes)
+                            _read(i + 1)
+                        }
+                    }
+                    _read(0)
+                })
+            } */
         </script>
     </body>
 </html>
