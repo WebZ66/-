@@ -10,13 +10,11 @@
         <script>
             //接收一个tasks数组，一个parallelCount限制。
             function addTask(value) {
-                return () => {
-                    return new Promise((resolve) => {
-                        setTimeout(() => {
-                            resolve(`${value}完成`)
-                        }, value * 1000)
-                    })
-                }
+                return new Promise((resolve) => {
+                    setTimeout(() => {
+                        resolve(`${value}完成`)
+                    }, value * 1000)
+                })
             }
 
             function myPromiseAll(tasks, parallelCount = 2) {
@@ -33,6 +31,8 @@
                         while (_tasks.length > 0 && runningCount < 2) {
                             let task = tasks.shift()
                             runningCount++
+                            console.log(task)
+
                             task()
                                 .then(
                                     (v) => {
@@ -61,7 +61,52 @@
                 })
             }
             //顺序也需要按序完成
-            myPromiseAll([addTask(1), addTask(4), addTask(3), addTask(2)]).then((res) => console.log(res))
+
+            function parallelTask(tasks, parallelCount = 4) {
+                let total = tasks.length
+                let _successResult = []
+                let _failResult = []
+                let _runningCount = 0
+                let index = 0
+                return new Promise((resolve, reject) => {
+                    if (!tasks.length) return reject('参数异常,任务列表为空')
+                    _run()
+                    function _run() {
+                        while (tasks.length > 0 && _runningCount < parallelCount) {
+                            let task = tasks.shift()
+                            _runningCount++
+
+                            if (typeof task != 'function') {
+                                fn = () => task
+                            } else {
+                                fn = task
+                            }
+                            fn()
+                                .then(
+                                    (v) => {
+                                        console.log('v', v)
+                                        _successResult[index++] = v
+                                        _runningCount--
+                                        if (index >= total) {
+                                            resolve(_successResult)
+                                        }
+                                    },
+                                    (r) => {
+                                        _failResult[index++] = r
+                                        if (_failResult.length >= total) {
+                                            reject(_failResult)
+                                        }
+                                    },
+                                )
+                                .finally(() => {
+                                    _run()
+                                })
+                        }
+                    }
+                })
+            }
+            //注意，如果传入的是已经执行完返回的prmoise，它就会有问题
+            parallelTask([addTask(1), addTask(4), addTask(3), addTask(2)]).then((res) => console.log(res))
         </script>
     </body>
 </html>
