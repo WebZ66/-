@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Document</title>
+    </head>
+    <body>
+        <script>
+            /*   Function.prototype.myCall = function (...context) {
+                //这个this指向函数
+                let obj = context[0] || window
+                obj.fn = this
+                let arg = context.slice(1)
+                let result = obj.fn(...arg)
+                delete obj.fn
+                return result
+            }
+            function fn() {
+                console.log(this)
+            } */
+
+            Function.prototype.myBind = function (...context) {
+                let obj = context[0]
+                let arg = context.slice(1)
+                let _this = this
+                console.log(_this)
+                return function () {
+                    return _this.apply(obj, arg)
+                }
+            }
+            function fn(...args) {
+                console.log(...args)
+                console.log(this)
+            }
+            fn.myBind({ name: 'obj' }, [1, 2])()
+        </script>
+    </body>
+</html>

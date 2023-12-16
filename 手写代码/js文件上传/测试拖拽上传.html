@@ -35,8 +35,9 @@
                 if (e.dataTransfer.files.length > 0) {
                     let reader = new FileReader()
                     reader.readAsDataURL(e.dataTransfer.files[0])
+
                     reader.onload = function (e) {
-                        img.src = e.currentTarget.result
+                        img.src = e.target.result
                     }
                 } else {
                     console.log('没有拖放文件。')

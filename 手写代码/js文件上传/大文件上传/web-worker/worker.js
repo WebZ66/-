@@ -17,6 +17,7 @@ self.onmessage = function (event) {
                 reader.readAsArrayBuffer(chunks[i])
                 reader.onload = function (e) {
                     //读取到了对应块的字节
+                    console.log('e', e)
                     let bytes = e.target.result
                     spark.append(bytes)
                     _read(i + 1)

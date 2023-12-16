@@ -20,5 +20,16 @@
         <div class="box1">
             <div class="box2"></div>
         </div>
+        <script>
+            async function test() {
+                return 1
+            }
+            async function call() {
+                const a = test()
+                const b = await test()
+                console.log(a, b)
+            }
+            call()
+        </script>
     </body>
 </html>
