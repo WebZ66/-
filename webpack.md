@@ -55,7 +55,7 @@ npm与npx是完全不同的
 
 ### 配置webpack智能提示
 
-```
+```js
 const { Configuration } = require('webpack')
 
 /**
@@ -213,7 +213,7 @@ module.exports = {
 
 **注意:css-loader只是负责解析项目中的所有的css文件，最后组合成一个css文件，但是它不会将样式插入到页面中**
 
-**如果希望在页面插入css，需要style-loader：通过js创建出一个style标签，然后将样式注入到head标签中**
+**如果希望在页面插入css，需要style-loader：`通过js创建出一个style标签`，然后将样式注入到head标签中**
 
 > loader的使用流程是从右向左的，从下向上的，所以右边必须是css-loader
 
@@ -309,7 +309,7 @@ createApp(Hello).mount('#app')
 
 **Loader是用于对模块的源代码进行转换处理。**
 
-> Loader的本质是 `导出为函数的JavaScript的模块`。 `loader runner库`会调用这个函数，然后 `将上一个loader产生的结果或者资源文件传入进去`。
+> loader的本质是 `导出为函数的JavaScript的模块`。 `loader runner库`会调用这个函数，然后 `将上一个loader产生的结果或者资源文件传入进去`。
 
  (注意，因为webpack是跑在node环境下的，只能通过module.exports导出函数，虽然现在支持export了，但是版本可能不兼容)****
 
@@ -317,7 +317,7 @@ createApp(Hello).mount('#app')
 
 ### loader本质
 
-1、loader本质上是导出为函数的js模块。所以首先需要创建一个js文件，且该模块返回一个函数。
+1、loader本质上是`导出结果为函数的js模块`。所以首先需要创建一个js文件，且该模块返回一个函数。
 
 ![image-20231117153806825](https://gitee.com/zhengdashun/pic_bed/raw/master/img/image-20231117153806825.png) ![image-20231117153817985](https://gitee.com/zhengdashun/pic_bed/raw/master/img/image-20231117153817985.png)
 
@@ -348,7 +348,7 @@ createApp(Hello).mount('#app')
 
 
 
-**配置resolveLoader**：
+**配置resolveLoader**：默认是node_modules
 
 **这样就可以简写对应的路径了**
 
@@ -380,9 +380,11 @@ createApp(Hello).mount('#app')
 
 - [ ] 什么是同步的loader
 
-  默认创建的loader就是同步的laoder。这个loader 必须通过 `return`或者`this.callback`来返回结果，结果`交由下一个loader进行处理`。通常在`有错误`的情况下，我们会使用`this.callback`进行错误提示。
+  默认创建的loader就是同步的laoder。这个loader 必须通过 `return`或者`this.callback`来返回结果，结果`交由下一个loader进行处理`。通常在`有错误`的情况下，我们会使用`this.callback`进行**错误提示**。
 
 ![image-20231117155327905](https://gitee.com/zhengdashun/pic_bed/raw/master/img/image-20231117155327905.png) ![image-20231117155338656](https://gitee.com/zhengdashun/pic_bed/raw/master/img/image-20231117155338656.png)
+
+
 
 ***
 
@@ -589,7 +591,7 @@ npx babel ./src --out-dir ./build --presets=@babel/preset-env
 
 
 
-webpack和babel的区别：
+**webpack和babel的区别**：
 
 - webpack打包后的文件会包含模块化的内容,但并没有转译
 
@@ -691,6 +693,8 @@ module.exports={
 	presets:['@babel/preset-env']
 }
 ```
+
+打包编译时会自动查找babel.config.js文件
 
 
 
@@ -2133,3 +2137,22 @@ vue.config.js
 **echrats监听传递options，init初始化，就需要以此判断，比如特殊情况①，必须要immediate：true后，直接进行init。**
 
 **特殊情况②：可以设置immedaite：false了，因为`只需要父组件发送请求后修改的值`**。当然 `this.$nextTick()是必须的`
+
+
+
+
+
+# Commonjs和Es Module区别
+
+- esmodule导入的是模块成员的引用，且是只读的。如果导入一个模块的某个对象，修改其属性是ok的，但是不能直接修改导入成员,这会报错。
+
+  commonjs导出的是值拷贝，如果内部再修改这个值，是不会影响外界，而es module会影响。
+
+- commonjs是在运行时加载模块，而esmodule是编译时就能确定模块间的依赖关系
+
+- commonjs不支持动态导入，esmodule支持动态导入，且返回的是一个promise。静态导入只能在最顶层使用，动态导入可以在任何地方使用，因此可以用于代码拆分，减小打包体积，性能优化。
+
+- commonjs是同步加载的，es module是异步加载
+
+
+
