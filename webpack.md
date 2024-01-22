@@ -267,6 +267,53 @@ module.exports = {
 
 
 
+## vite处理图片
+
+**当我们打开控制台，运行时的图片路径是 `打包后的图片路径`**
+
+**vite自动转换路径：**
+
+- css中的静态路径
+- img中的src(静态路径)  （不能动态绑定，如果动态绑定，那么无法自动转换成打包后的图片路径）
+
+![image-20240122100011469](https://gitee.com/zhengdashun/pic_bed/raw/master/img/image-20240122100011469.png) 
+
+**这种情况下，图片无法正常显示**
+
+
+
+**那如何动态切换图片呢？**
+
+> ①：通过import直接导入所有图片，import导入的图片不是图片的真实路径，而是打包后的路径
+>
+> - ![image-20240122100136564](https://gitee.com/zhengdashun/pic_bed/raw/master/img/image-20240122100136564.png) **图片可以正常显示**
+>
+> ②：将图片放在public文件夹下，因为pulic文件夹下的文件不会被打包，会原封不动的放到生成文件里
+>
+> - ![image-20240122100327117](https://gitee.com/zhengdashun/pic_bed/raw/master/img/image-20240122100327117.png)
+>
+>   **图片可以正常显示，但是打包后图片会被原封不动的放入到dist文件夹下**
+>
+> ③：`动态导入` import().then()   
+>
+> - ![image-20240122100643369](https://gitee.com/zhengdashun/pic_bed/raw/master/img/image-20240122100643369.png)
+>
+>   > 图片可以正常显示，但是有缺点： `动态导入的内容会被单独打包成一个个chunk，只有当使用到时才会动态加载导入，因此打包后的dist文件夹里会多很多chunk`
+>
+> ④：`new URL('相对路径',import.meta.url当前模块的url)`     
+>
+> - ![ ](https://gitee.com/zhengdashun/pic_bed/raw/master/img/image-20240122101058345.png) 
+>
+>   图片可以正常显示，new URL是新增的一个api，可以获取到绝对路径打包路径等等。最推荐使用！！！
+>
+> 
+
+
+
+
+
+
+
 ## vue-loader
 
 > 安装: npm install vue  vue-loader
